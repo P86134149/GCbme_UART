@@ -7,7 +7,9 @@ def find_serial_port():
     if len(ports) == 0:
         print("No serial ports found")
         exit()
-    # print(f"Serial port found: {ports}")
+    # 打印每個可用端口的設備名稱
+    for port in ports:
+        print(f"Serial port found: {port.device}")
     return ports[1].device
 
 # 初始化串口
@@ -75,23 +77,34 @@ def process_data(data):
 
     # 檢查是否有完整的數據包（每個包5字節）
     while len(buffer) >= 5:
-        packet = buffer[:5]  # 提取前5字節的數據包
-        buffer = buffer[5:]  # 剩餘的數據留在緩衝區
+        # 檢查數據包是否以0x03開頭，並以0xFC結尾
+        start_index = buffer.find(b'\x03')
+        if start_index == -1:
+            # 沒有找到0x03開頭的標識符，丟棄無效的數據
+            buffer = b''
+            return
+
+        if len(buffer) < start_index + 5:
+            # 數據包還不完整，等待更多數據
+            return
+
+        packet = buffer[start_index:start_index + 5]  # 提取前5字節的數據包
+        buffer = buffer[start_index + 5:]  # 剩餘的數據留在緩衝區
 
         # 解析數據包
-        ecg_high = packet[1]
-        ecg_low = packet[2]
-        ecg_value = (ecg_high << 8) | ecg_low  # 合併高低位為16位ECG數據
-        heart_rate = packet[3]
-        end_byte = packet[4]
+        if packet[0] == 0x03 and packet[4] == 0xFC:
+            ecg_high = packet[1]
+            ecg_low = packet[2]
+            ecg_value = (ecg_high << 8) | ecg_low  # 合併高低位為16位ECG數據
+            heart_rate = packet[3]
 
-        if end_byte == 0xFC:
             # 處理二補碼，如果超過32767，說明是負數
             if ecg_value > 32767:
                 ecg_value = ecg_value - 65536
+
             print(f"ECG Value: {ecg_value}, Heart Rate: {heart_rate}")
         else:
-            print("Error: Invalid packet ending")
+            print("Error: Invalid packet structure")
 
 # 測試收發流程
 def test_uart():

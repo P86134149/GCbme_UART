@@ -1,12 +1,9 @@
 import serial
 import serial.tools.list_ports as port_list
-from py_UART02 import find_serial_port
-COM_PORT = find_serial_port()
-# 設定串口參數，使用你自己的串口號
-ser = serial.Serial(COM_PORT, 115200)  # 串口端口設置
-
-# 初始化緩衝區
-buffer = b''  # 用來存儲未處理的數據
+from py_UART import find_serial_port
+# COM_PORT = find_serial_port()
+# # 設定串口參數，使用你自己的串口號
+# ser = serial.Serial(COM_PORT, 115200)  # 串口端口設置
 
 # 數據處理函數
 buffer = b''  # 用來存儲未處理的數據
@@ -48,7 +45,13 @@ def process_data(data):
             print("Error: Invalid packet structure")
 
 # 從串口讀取數據的主循環
-while True:
-    data = ser.read(ser.in_waiting or 1)  # 等待接收數據
-    if data:
-        process_data(data)  # 將接收到的數據傳入處理函數
+# while True:
+#     data = ser.read(ser.in_waiting or 1)  # 等待接收數據
+#     if data:
+#         process_data(data)  # 將接收到的數據傳入處理函數
+# 測試數據包
+test_data = b'\x03\x7A\x34\x50\xFC\x03\xA2\xD5\x60\xFC'
+
+# 模擬逐字節接收數據
+for byte in test_data:
+    process_data(bytes([byte]))

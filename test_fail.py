@@ -92,6 +92,12 @@ def process_data(data):
 
     # 檢查是否有完整的數據包（每個包5字節）
     while len(buffer) >= 5:
+        # 檢查數據包的起始標識
+        if buffer[0] != 0x03:
+            print("Error: Invalid packet start")
+            buffer = buffer[1:]  # 丟棄第一個字節，繼續檢查
+            continue
+
         packet = buffer[:5]  # 提取前5字節的數據包
         buffer = buffer[5:]  # 剩餘的數據留在緩衝區
 
