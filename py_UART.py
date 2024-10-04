@@ -7,7 +7,8 @@ def find_serial_port():
     if len(ports) == 0:
         print("No serial ports found")
         exit()
-    return ports[0].device
+    # print(f"Serial port found: {ports}")
+    return ports[1].device
 
 # 初始化串口
 def init_serial(port, baudrate=115200, timeout=0.5):
@@ -96,7 +97,7 @@ def process_data(data):
 def test_uart():
     port = find_serial_port()
     ser = init_serial(port)
-    
+
     # 等待開發板傳來開始信號
     wait_for_signal(ser)
     
