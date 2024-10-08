@@ -1,5 +1,7 @@
 import serial
 import serial.tools.list_ports as port_list
+import os
+import time
 
 # 查找可用的串口
 def find_serial_port():
@@ -61,13 +63,13 @@ def receive_data(ser, is_binary):
         print(f"Error receiving data: {ex}")
 
 # 開始信號
-def wait_for_signal(ser, signal='ready'):
-    print("Waiting for start signal...")
-    while True:
-        data = receive_data(ser, is_binary=True)  # 等待ASCII格式的開始信號
-        if data == signal:
-            print("Start signal received!")
-            break
+# def wait_for_signal(ser):
+#     print("Waiting for start signal...")
+#     while True:
+#         data = ser.read(1)  # 讀取一個字節
+#         if data == b'\x03':
+#             print("Start signal '0x03' received!")
+#             break
 
 buffer = b''  # 用來存儲未處理的數據
 
@@ -103,8 +105,15 @@ def process_data(data):
                 ecg_value = ecg_value - 65536
 
             print(f"ECG Value: {ecg_value}, Heart Rate: {heart_rate}")
+            # 將數據存成 txt 檔案
+            save_data_to_file(ecg_value, heart_rate)  
         else:
             print("Error: Invalid packet structure")
+
+# 將接收到的資料存成 txt 檔案的函式
+def save_data_to_file(ecg_value, heart_rate, filename="ecg_data.txt"):
+    with open(filename, "a") as file:
+        file.write(f"ECG Value: {ecg_value}, Heart Rate: {heart_rate}\n")
 
 # 測試收發流程
 def test_uart():
@@ -112,14 +121,15 @@ def test_uart():
     ser = init_serial(port)
 
     # 等待開發板傳來開始信號
-    wait_for_signal(ser)
+    # wait_for_signal(ser)
     
     # 發送資料給開發板
-    send_data(ser, 'PC ready to send data')
+    # send_data(ser, 'PC ready to receive data')
     
     # 接收開發板傳來的分類結果
     # 如果是ECG數據，設定is_binary=True
-    receive_data(ser, is_binary=True)  # 這裡設為True來接收二進制數據
+    while True:
+        receive_data(ser, is_binary=False)  # 這裡設為True來接收二進制數據
     
     ser.close()
 
